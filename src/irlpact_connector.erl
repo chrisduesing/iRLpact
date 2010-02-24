@@ -58,8 +58,12 @@ init([]) ->
 %% Description: Handling call messages
 %%--------------------------------------------------------------------
 handle_call({connect, IP, Port}, _From, State) ->
-    {ok, Sock} = gen_tcp:connect(IP, Port, [raw]),
-    Reply = ok,
+    Reply = case gen_tcp:connect(IP, Port, [binary]) of
+	{ok, Sock} ->
+	    ok;
+	Other ->
+	    error
+    end,
     {reply, Reply, State};
 
 handle_call(_Request, _From, State) ->

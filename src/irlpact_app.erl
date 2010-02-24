@@ -26,6 +26,7 @@
 %% top supervisor of the tree.
 %%--------------------------------------------------------------------
 start(_Type, _StartArgs) ->
+    application:start(crypto),
     case irlpact_sup:start_link() of
 	{ok, Pid} -> 
 	    {ok, Pid};
