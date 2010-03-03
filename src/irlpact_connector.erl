@@ -10,7 +10,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, connect/2, login/2, register/1]).
+-export([start_link/0, connect/2, login/2, register_listener/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -24,6 +24,7 @@
 %%====================================================================
 %% API
 %%====================================================================
+
 %%--------------------------------------------------------------------
 %% Function: start_link() -> {ok,Pid} | ignore | {error,Error}
 %% Description: Starts the server
@@ -31,14 +32,35 @@
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
+%%--------------------------------------------------------------------
+%% Function: register_listener(Pid, MessageTypes) -> ok | {error,Error}
+%%           MessageTypes = heartbeat | login_response | ...
+%% Description: register a client to be notified of message types
+%%--------------------------------------------------------------------
+register_listener(Pid, MessageTypes) ->
+    gen_server:cast(?MODULE, {register, Pid, MessageTypes}).
+
+%%--------------------------------------------------------------------
+%% Function: connect(IP, Port) -> {ok,Pid} | {error,Error}
+%% Description: Starts the server
+%%--------------------------------------------------------------------
 connect(IP, Port) ->
     gen_server:call(?MODULE, {connect, IP, Port}).
 
+%%--------------------------------------------------------------------
+%% Function: start_link() -> {ok,Pid} | ignore | {error,Error}
+%% Description: Starts the server
+%%--------------------------------------------------------------------
 login(Username, Password) ->
     gen_server:call(?MODULE, {login, Username, Password}).
 
-register(Pid) ->
-    gen_server:cast(?MODULE, {register, Pid}).
+%%--------------------------------------------------------------------
+%% Function: start_link() -> {ok,Pid} | ignore | {error,Error}
+%% Description: Starts the server
+%%--------------------------------------------------------------------
+subscribe_by_type(TypeList) when is_list(TypeList) ->
+    gen_server:cast(?MODULE, {subscribe_by_type, TypeList}).
+
 
 %%====================================================================
 %% gen_server callbacks
@@ -79,17 +101,10 @@ handle_call({login, Username, Password}, _From, State) ->
     Sequence = State#state.sequence + 1,
     NewState = State#state{sequence=Sequence},
     LoginMessage = irlpact_message:build_login_message(Username, Password, Sequence),
-    io:fwrite("login message: ~p~n", [LoginMessage]),
+    io:fwrite("login message: ~s~n", [LoginMessage]),
     case gen_tcp:send(Socket, LoginMessage) of
 	ok ->
-	   % case gen_tcp:recv(Socket, 3424) of
-		%{ok, Packet} ->
-		%    io:fwrite("Login response: ~p~n", [Packet]),
-		    {reply, ok, NewState};
-		%{error, Reason} ->
-		%    io:fwrite("gen_tcp:recv failed in login: ~p~n", [Reason]),
-		%    {reply, {error, Reason}, State}
-	   % end;	   
+	    {reply, ok, NewState};
 	{error, Reason} ->
 	    {reply, {error, Reason}, NewState}
     end;
@@ -108,6 +123,10 @@ handle_cast({register, Pid}, State) ->
     NewState = State#state{listener=Pid},
     {noreply, NewState};
 
+handle_cast({subscribe_by_type, TypeList}, State) ->
+    {ok, NewState} = request_products(TypeList, State),
+    {noreply, NewState};
+
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
@@ -118,7 +137,7 @@ handle_cast(_Msg, State) ->
 %% Description: Handling all non call/cast messages
 %%--------------------------------------------------------------------
 handle_info({tcp, Socket, Data}, #state{leftover=Prepend} = State) when Prepend /= nill ->
-    io:fwrite("irlpact_connector:handle_info with prepend data~n", []),
+    io:fwrite("prepend data: ", []),
     {ok, NewState} = handle_streaming_data(<<Prepend/binary, Data/binary>>, State),
     inet:setopts(Socket, [{active, once}]),
     {noreply, NewState};
@@ -165,7 +184,7 @@ code_change(_OldVsn, State, _Extra) ->
 
 handle_streaming_data(Data, State) ->
     Messages = irlpact_message:parse(Data),
-    io:fwrite("irlpact_connector:handle_streaming_data parsed messages: ~w~n", [Messages]),
+    %io:fwrite("irlpact_connector:handle_streaming_data parsed messages: ~w~n", [Messages]),
     case notify(State#state.listener, Messages) of
 	{partial_message, Leftover} ->
 	    NewState = State#state{leftover=Leftover},
@@ -187,6 +206,16 @@ notify(_Listener, [{partial_message, Message}]) ->
 notify(_Listener, _) ->
     ok.
 
+request_products([MarketTypeId | T], #state{socket=Socket, sequence=Sequence} = State) ->
+    NextSequence = Sequence + 1,
+    Message = irlpact_message:build_product_definition_request(MarketTypeId, NextSequence),
+    io:fwrite("sending product definition request: ~p~n", [Message]),
+    gen_tcp:send(Socket, Message),
+    NewState = State#state{sequence=NextSequence},
+    request_products(T, NewState);
+
+request_products([], State) ->
+    {ok, State}.
 
 %%--------------------------------------------------------------------
 %%% Unit tests
@@ -194,5 +223,5 @@ notify(_Listener, _) ->
 
 connect_test() ->
     irlpact_connector:connect("63.247.113.163", 8000),
-    irlpact_connector:login("ccx_ps","Starts123").
-    
+    irlpact_connector:login("ccx_pf","Starts123"),
+    subscribe_by_type([12,30,34,38,43]).
