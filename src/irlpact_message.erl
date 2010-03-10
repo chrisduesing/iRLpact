@@ -123,53 +123,87 @@ parse_message(<<"A">>, 425, MessageBody) ->
 
 parse_message(<<"B">>, 521, MessageBody) -> 
     %io:fwrite("received product definition response~n", []),
-    << _ReqSeqId:32, RequestMarketType:16, NumMarkets:16, MarketId:32, ContractSymbol:35/binary, TradingStatus:1/binary, OrderPriceDenominator:1/binary, IncrementPrice:32, IncrementQty:32,
+   << _ReqSeqId:32, RequestMarketType:16, NumMarkets:16, MarketId:32, ContractSymbol:35/binary, TradingStatus:1/binary, OrderPriceDenominator:1/binary, IncrementPrice:32, IncrementQty:32,
        LotSize:32, MarketDesc:120/binary, MaturityYear:16, MaturityMonth:16, MaturityDay:16, IsSpread:1/binary, IsCrackSpread:1/binary, PrimaryMarketId:32, SecondaryMarketId:32, 
        IsOptions:1/binary, OptionType:1/binary, StrikePrice:64, SecondStrike:64, DealPriceDenominator:1/binary, MinQty:32, UnitQty:32, Currency:20/binary, MinStrikePrice:64, MaxStrikePrice:64,
        IncrementStrikePrice:32, NumDecimalsStrikePrice:1/binary, MinOptionsPrice:64, MaxOptionsPrice:64, IncrementOptionsPrice:32, NumDecimalsOptionsPrice:1/binary, TickValue:64,
        AllowOptions:1/binary, ClearedAlias:15/binary, AllowImplied:1/binary, OptionsExpirationYear:16, OptionsExpirationMonth:16, OptionsExpirationDay:16, MinPrice:64, MaxPrice:64,
        ProductId:16, ProductName:62/binary, HubId:16, HubAlias:80/binary, StripId:16, StripName:39/binary, _ReservedField1:1/binary >> = MessageBody,
-
-    PD = #product_definition{ market_type=RequestMarketType, num_markets=NumMarkets, market_id=MarketId, contract_symbol=ContractSymbol, trading_status=TradingStatus, 
-			      order_price_denominator=OrderPriceDenominator, increment_price=IncrementPrice, increment_qty=IncrementQty, lot_size=LotSize, market_desc=MarketDesc, 
-			      maturity_year=MaturityYear, marturity_month=MaturityMonth, maturity_day=MaturityDay, is_spread=IsSpread, is_crack_spread=IsCrackSpread, 
-			      primary_market_id=PrimaryMarketId, secondary_market_id=SecondaryMarketId, is_options=IsOptions, option_type=OptionType, strike_price=StrikePrice, 
-			      second_strike=SecondStrike, deal_price_denominator=DealPriceDenominator, min_qty=MinQty, unit_qty=UnitQty, currency=Currency, min_strike_price=MinStrikePrice, 
-			      max_strike_price=MaxStrikePrice, increment_strike_price=IncrementStrikePrice, num_decimals_strike_price=NumDecimalsStrikePrice, min_options_price=MinOptionsPrice, 
-			      max_options_price=MaxOptionsPrice, increment_options_price=IncrementOptionsPrice, num_decimals_options_price=NumDecimalsOptionsPrice, tick_value=TickValue, 
-			      allow_options=AllowOptions, cleared_alias=ClearedAlias, allow_implied=AllowImplied, options_expiration_year=OptionsExpirationYear, 
-			      options_expiration_month=OptionsExpirationMonth, options_expiration_day=OptionsExpirationDay, min_price=MinPrice, max_price=MaxPrice, product_id=ProductId, 
-			      product_name=ProductName, hub_id=HubId, hub_alias=HubAlias, strip_id=StripId, strip_name=StripName },
+    PD = #product_definition{ 
+      market_type=RequestMarketType, num_markets=NumMarkets, market_id=MarketId, contract_symbol=ContractSymbol, trading_status=TradingStatus, order_price_denominator=OrderPriceDenominator, 
+      increment_price=IncrementPrice, increment_qty=IncrementQty, lot_size=LotSize, market_desc=MarketDesc, maturity_year=MaturityYear, marturity_month=MaturityMonth, maturity_day=MaturityDay, 
+      is_spread=IsSpread, is_crack_spread=IsCrackSpread, primary_market_id=PrimaryMarketId, secondary_market_id=SecondaryMarketId, is_options=IsOptions, option_type=OptionType, 
+      strike_price=StrikePrice, second_strike=SecondStrike, deal_price_denominator=DealPriceDenominator, min_qty=MinQty, unit_qty=UnitQty, currency=Currency, min_strike_price=MinStrikePrice, 
+      max_strike_price=MaxStrikePrice, increment_strike_price=IncrementStrikePrice, num_decimals_strike_price=NumDecimalsStrikePrice, min_options_price=MinOptionsPrice, 
+      max_options_price=MaxOptionsPrice, increment_options_price=IncrementOptionsPrice, num_decimals_options_price=NumDecimalsOptionsPrice, tick_value=TickValue, allow_options=AllowOptions, 
+      cleared_alias=ClearedAlias, allow_implied=AllowImplied, options_expiration_year=OptionsExpirationYear, options_expiration_month=OptionsExpirationMonth, 
+      options_expiration_day=OptionsExpirationDay, min_price=MinPrice, max_price=MaxPrice, product_id=ProductId, product_name=ProductName, hub_id=HubId, hub_alias=HubAlias, strip_id=StripId, 
+      strip_name=StripName 
+     },
     {product_definition, PD};
 
 parse_message(<<"i">>, 84, MessageBody) ->
     {strip_info, MessageBody};
 
 parse_message(<<"C">>, 105, MessageBody) ->
-    io:fwrite("received market snapshot~n", []),
-    {market_snapshot, MessageBody};
+    %io:fwrite("parse market snapshot~n", []),
+    << _ReqSeqId:32, MarketType:16, MarketId:32, TradingStatus:1/binary, Volume:32, BlockVolume:32, EFSVolume:32, EFPVolume:32, OpenInterest:32, OpeningPrice:64, SettlementPrice:64,
+       High:64, Low:64, VWAP:64, NumOfOrderEntries:32, LastTradePrice:64, LastTradeQuantity:32, LastTradeDateTime:64, SettlePriceDateTime:64, _ReservedField1:2/binary >> = MessageBody,
+    MS = #market_snapshot{
+      market_type = MarketType, market_id = MarketId, trading_status = TradingStatus, volume = Volume, block_volume = BlockVolume, efs_volume = EFSVolume, 
+      efp_volume = EFPVolume, open_interest = OpenInterest, opening_price = OpeningPrice, settlement_price = SettlementPrice, high = High, low = Low, vwap = VWAP, 
+      num_of_order_entries = NumOfOrderEntries, last_trade_price = LastTradePrice, last_trade_quantity = LastTradeQuantity, last_trade_date_time = LastTradeDateTime, 
+      settle_price_date_time = SettlePriceDateTime
+     },
+    {market_snapshot, MS};
 
 parse_message(<<"D">>, 43, MessageBody) ->
     io:fwrite("received market snapshot order~n", []),
-    {market_snapshot_order, MessageBody};
+    << _ReqSeqId:32, MarketType:16, MarketId:32, OrderId:64, OrderSequenceId:16, Side:1/binary, Price:64, Quantity:32, IsImplied:1/binary, IsRFQ:1/binary, OrderEntryDateTime:64 >> = MessageBody,
+    O = #order{
+      market_type=MarketType, market_id=MarketId, order_id=OrderId, order_sequence_id=OrderSequenceId, side=Side, price=Price, quantity=Quantity, is_implied=IsImplied, is_rfq=IsRFQ, 
+      order_entry_date_time=OrderEntryDateTime, is_snapshot=true
+     },
+    {market_snapshot_order, O};
 
 parse_message(<<"E">>, 45, MessageBody) ->
-    {add_modify_order, MessageBody};
+    io:fwrite("received add/modify order~n", []),
+    << MarketId:32, OrderId:64, OrderSequenceId:16, Side:1/binary, Price:64, Quantity:32, IsImplied:1/binary, IsRFQ:1/binary, OrderEntryDateTime:64, SentTime:64 >> = MessageBody,
+    O = #order{
+      market_id=MarketId, order_id=OrderId, order_sequence_id=OrderSequenceId, side=Side, price=Price, quantity=Quantity, is_implied=IsImplied, is_rfq=IsRFQ, 
+      order_entry_date_time=OrderEntryDateTime, sent_time=SentTime, is_snapshot=false
+     },
+    {add_modify_order, O};
 
 parse_message(<<"F">>, 21, MessageBody) ->
-    {delete_order, MessageBody};
+    io:fwrite("received add/modify order~n", []),
+    << MarketId:32, OrderId:64, SentTime:64, SecurityType:1/binary >> = MessageBody,   
+    D = #deleted_order{ market_id=MarketId, order_id=OrderId, sent_time=SentTime, security_type=SecurityType },
+    {delete_order, D};
 
 parse_message(<<"G">>, 43, MessageBody) ->
-    {trade, MessageBody};
+    io:fwrite("received trade~n", []),
+    << MarketId:32, OrderId:64, IsSystemPricedLeg:1/binary, Price:64, Quantity:16, BlockTradeType:1/binary, TransactDateTime:64, SentTime:64, SystemPricedLegType:1/binary >> = MessageBody,    
+    T = #trade{
+      market_id=MarketId, order_id=OrderId, is_system_priced_leg=IsSystemPricedLeg, price=Price, quantity=Quantity, block_trade_type=BlockTradeType, transact_date_time=TransactDateTime, 
+      sent_time=SentTime, system_priced_leg_type=SystemPricedLegType
+     },
+    {trade, T};
 
 parse_message(<<"H">>, 34, MessageBody) ->
     {investigated_trade, MessageBody};
 
 parse_message(<<"I">>, 33, MessageBody) ->
-    {cancelled_trade, MessageBody};
+    io:fwrite("received cancelled trade~n", []),
+    << MarketId:32, OrderId:64, Price:64, Quantity:16, BlockTradeType:1/binary, DateTime:64 >> = MessageBody,   
+    CT = #cancelled_trade{ market_id=MarketId, order_id=OrderId, price=Price, quantity=Quantity, block_trade_type=BlockTradeType, date_time=DateTime },
+    {cancelled_trade, CT};
 
 parse_message(<<"J">>, 52, MessageBody) ->
-    {market_statistics, MessageBody};
+    %io:fwrite("parse market snapshot~n", []),
+    << MarketId:32, Volume:32, BlockVolume:32, EFSVolume:32, EFPVolume:32, High:64, Low:64, VWAP:64, DateTime:64 >> = MessageBody,
+    MS = #market_snapshot_update{ market_id=MarketId, volume=Volume, block_volume=BlockVolume, efs_volume=EFSVolume, efp_volume=EFPVolume, high=High, low=Low, vwap=VWAP, date_time=DateTime },
+    {market_statistics, MS};
 
 parse_message(<<"K">>, 13, MessageBody) ->
     {market_state_change, MessageBody};
@@ -219,8 +253,8 @@ parse_message(<<"S">>, 105, MessageBody) ->
 parse_message(<<"T">>, 1, MessageBody) ->
     {message_bundle_marker, MessageBody};
 
-parse_message(Type, Length, _MessageBody) ->
-    io:fwrite("Cannot parse message of type: ~s, length: ~p~n", [Type, Length]),
+parse_message(Type, Length, MessageBody) ->
+    io:fwrite("Cannot parse message of type: ~s and length: ~p, with value: ~s~n", [Type, Length, MessageBody]),
     {error, unhandled_message}.
 
 

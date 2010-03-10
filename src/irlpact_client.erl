@@ -39,8 +39,10 @@ start() ->
 
 run() ->
     receive
-	%{product_definition, #product_definition{market_id=MarketId}} ->
-	    
+	{product_definition, #product_definition{market_id=MarketId}} ->
+	    io:fwrite("received product definition response for market id: ~p~n", [MarketId]);
+	{market_snapshot, #market_snapshot{market_id=MarketId, open_interest=OpenInterest}} ->
+	    io:fwrite("received market snapshot for market id: ~p with oi: ~p~n", [MarketId, OpenInterest]);
 	_ ->
 	    ok
     end,
