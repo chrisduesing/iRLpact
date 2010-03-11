@@ -1,7 +1,0 @@
-[{eunit,"2.1.4",[stdlib],"/usr/local/lib/erlang/lib/eunit-2.1.4"},
- {crypto,"1.6.3",[kernel,stdlib],"/usr/local/lib/erlang/lib/crypto-1.6.3"},
- {stdlib,"1.16.4",[kernel],"/usr/local/lib/erlang/lib/stdlib-1.16.4"},
- {kernel,"2.13.4",[],"/usr/local/lib/erlang/lib/kernel-2.13.4"},
- {irlpact,"0.1",
-          [kernel,stdlib,crypto,eunit],
-          "/Users/chrisduesing/projects/irlpact/_build/development/apps/irlpact-0.1"}].
