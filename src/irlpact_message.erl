@@ -212,7 +212,10 @@ parse_message(<<"L">>, 1008, MessageBody) ->
     {system_text, MessageBody};
 
 parse_message(<<"M">>, 20, MessageBody) ->
-    {open_interest, MessageBody};
+    io:fwrite("parse open interest~n", []),
+    << MarketId:32, OpenInterest:32, OpenInterestChange:32, DateTime:64 >> = MessageBody,
+    OI = #open_interest{ market_id=MarketId, open_interest=OpenInterest, open_interest_change=OpenInterestChange, date_time=DateTime },
+    {open_interest, OI};
 
 parse_message(<<"N">>, 20, MessageBody) ->
     {open_price, MessageBody};
