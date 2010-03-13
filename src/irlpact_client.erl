@@ -14,6 +14,7 @@
 -include_lib("irlpact.hrl").
 
 -record(state, {order_books, product_definitions, market_snapshots}).
+-record(order_book, {buy_book=[], sell_book=[]}).
 
 %%====================================================================
 %% API
@@ -33,8 +34,12 @@ start() ->
     % start connection
     Pid = spawn(irlpact_client, run, [State]),
     irlpact_connector:register_listener(Pid),
+    % api test environment
     irlpact_connector:connect("63.247.113.163", 8000),
     irlpact_connector:login("ccx_pf","Starts123"),
+    % perf test environment
+    %irlpact_connector:connect("63.247.113.214", 8000),
+    %irlpact_connector:login("ccx_ps","Starts123"),
     irlpact_connector:request_products_by_type([12,30,34,38,43]),
     irlpact_connector:subscribe_by_type([12,30,34,38,43]).
 
@@ -52,7 +57,8 @@ run(#state{order_books=OrderBooks, product_definitions=ProductDefinitions, marke
 	{product_definition, #product_definition{market_id=MarketId} = ProductDefinition} ->
 	    io:fwrite("received product definition response for market id: ~p~n", [MarketId]),
 	    NewProductDefinitions = dict:append(MarketId, ProductDefinition, ProductDefinitions),
-	    NewState = State#state{product_definitions=NewProductDefinitions},
+	    NewOrderBooks = dict:append(MarketId, #order_book{}, OrderBooks),
+	    NewState = State#state{order_books=NewOrderBooks, product_definitions=NewProductDefinitions},
 	    run(NewState);
 
 	{market_snapshot, #market_snapshot{market_id=MarketId } = MarketSnapshot} ->
@@ -69,7 +75,44 @@ run(#state{order_books=OrderBooks, product_definitions=ProductDefinitions, marke
 	    NewState = State#state{market_snapshots=NewMarketSnapshots},
 	    run(NewState);
 	    
+	{open_interest, #open_interest{market_id=MarketId} = OpenInterest} ->
+	    io:fwrite("received open interest for market id: ~p~n", [MarketId]),
+	    MarketSnapshot = dict:fetch(MarketId, MarketSnapshots),
+	    NewMarketSnapshot = irlpact_util:apply_update(MarketSnapshot, OpenInterest),
+	    NewMarketSnapshots = dict:append(MarketId, NewMarketSnapshot, MarketSnapshots),
+	    NewState = State#state{market_snapshots=NewMarketSnapshots},
+	    run(NewState);
+	    
+	{order, #order{market_id=MarketId, order_id=OrderId} = Order} ->
+	    io:fwrite("received an order with id: ~p for market: ~p~n", [OrderId, MarketId]),
+	    OrderBook = dict:fetch(MarketId, OrderBooks),
+	    #order_book{buy_book=BuyBook, sell_book=SellBook} = OrderBook,
+	    F = fun(Order1, Order2) ->
+			#order{price=Price1, sent_time=Time1} = Order1,
+			#order{price=Price2, sent_time=Time2} = Order2,
+			case Price1 /= Price2 of
+			    true ->
+				Price1 =< Price2;
+			    false ->
+				Time1 =< Time2
+			end
+		end,    
+	    NewOrderBooks = case Order#order.side of
+				<<1>> ->
+				    NewBuyBook = [BuyBook | Order],
+				    SortedBuyBook = lists:sort(F, NewBuyBook),
+				    NewOrderBook = OrderBook#order_book{buy_book=SortedBuyBook},
+				    dict:store(MarketId, NewOrderBook, OrderBooks);
+				<<2>> ->   	    
+				    NewSellBook = [SellBook | Order],
+				    SortedSellBook = lists:sort(F, NewSellBook),
+				    NewOrderBook = OrderBook#order_book{buy_book=SortedSellBook},
+				    dict:store(MarketId, NewOrderBook, OrderBooks)
+			     end,
+	    NewState = State#state{order_books=NewOrderBooks},
+	    run(NewState);
+	    
 
 	_ ->
-	    ok
+	    run(State)
     end.

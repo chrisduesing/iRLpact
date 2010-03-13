@@ -122,7 +122,7 @@ parse_message(<<"A">>, 425, MessageBody) ->
     {login_response, RequestSeqId, Code, Text, MarketTypesPermissioned};
 
 parse_message(<<"B">>, 521, MessageBody) -> 
-    %io:fwrite("received product definition response~n", []),
+    io:fwrite("received product definition response~n", []),
    << _ReqSeqId:32, RequestMarketType:16, NumMarkets:16, MarketId:32, ContractSymbol:35/binary, TradingStatus:1/binary, OrderPriceDenominator:1/binary, IncrementPrice:32, IncrementQty:32,
        LotSize:32, MarketDesc:120/binary, MaturityYear:16, MaturityMonth:16, MaturityDay:16, IsSpread:1/binary, IsCrackSpread:1/binary, PrimaryMarketId:32, SecondaryMarketId:32, 
        IsOptions:1/binary, OptionType:1/binary, StrikePrice:64, SecondStrike:64, DealPriceDenominator:1/binary, MinQty:32, UnitQty:32, Currency:20/binary, MinStrikePrice:64, MaxStrikePrice:64,
@@ -146,7 +146,7 @@ parse_message(<<"i">>, 84, MessageBody) ->
     {strip_info, MessageBody};
 
 parse_message(<<"C">>, 105, MessageBody) ->
-    %io:fwrite("parse market snapshot~n", []),
+    io:fwrite("parse market snapshot~n", []),
     << _ReqSeqId:32, MarketType:16, MarketId:32, TradingStatus:1/binary, Volume:32, BlockVolume:32, EFSVolume:32, EFPVolume:32, OpenInterest:32, OpeningPrice:64, SettlementPrice:64,
        High:64, Low:64, VWAP:64, NumOfOrderEntries:32, LastTradePrice:64, LastTradeQuantity:32, LastTradeDateTime:64, SettlePriceDateTime:64, _ReservedField1:2/binary >> = MessageBody,
     MS = #market_snapshot{

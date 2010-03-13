@@ -4,9 +4,11 @@
   {modules, [
     irlpact,
     irlpact_app,
-    irlpact_sup,
+    irlpact_client,
     irlpact_connector,
-    irlpact_client
+    irlpact_message,
+    irlpact_sup,
+    irlpact_util
   ]},
   {registered, [irlpact_connector, irlpact_client]},
   {mod, {irlpact_app, []}},
