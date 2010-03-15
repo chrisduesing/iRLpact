@@ -1,3 +1,5 @@
+*** Installation ***
+
 To use iRLpact it is reccomended that you use the sinan build tool from erlware. Go to http://erlware.org and download the faxien package manager. Once it is installed type
 
 >faxien ir sinan. 
@@ -13,3 +15,26 @@ To get an erl environment with all of the proper paths set up for testing and de
 To install iRLpact as a release type
 
 >faxien ir
+
+
+*** Use ***
+
+Initialize the application; from the shell
+
+>irlpact:start().
+
+Then to test a live feed
+
+>irlpact_client:start().
+
+
+*** Development ***
+
+The irlpact_client module is meant to be an example application. It shows how to log in, subscribe to messages, and parse incoming data in to various data structures. Your application should simply list irlpact as a dependancy in your .app file. If iRLpact is installed on your system then it should be available to use as a library.
+
+
+*** Support ***
+
+This code is available under the MIT license.
+
+This library is an example, I take no responsibility for its fitness in a production environment. It should also be noted that this library is incomplete, as I did not need all of the functionality ICE provides. Adding new messages should be done in irlpact_messages.erl. If you make any changes please submit a patch via github.
