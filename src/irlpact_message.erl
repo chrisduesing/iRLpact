@@ -122,7 +122,7 @@ parse_message(<<"A">>, 425, MessageBody) ->
     {login_response, RequestSeqId, Code, Text, MarketTypesPermissioned};
 
 parse_message(<<"B">>, 521, MessageBody) -> 
-    io:fwrite("received product definition response~n", []),
+   %io:fwrite("received product definition response~n", []),
    << _ReqSeqId:32, RequestMarketType:16, NumMarkets:16, MarketId:32, ContractSymbol:35/binary, TradingStatus:1/binary, OrderPriceDenominator:1/binary, IncrementPrice:32, IncrementQty:32,
        LotSize:32, MarketDesc:120/binary, MaturityYear:16, MaturityMonth:16, MaturityDay:16, IsSpread:1/binary, IsCrackSpread:1/binary, PrimaryMarketId:32, SecondaryMarketId:32, 
        IsOptions:1/binary, OptionType:1/binary, StrikePrice:64, SecondStrike:64, DealPriceDenominator:1/binary, MinQty:32, UnitQty:32, Currency:20/binary, MinStrikePrice:64, MaxStrikePrice:64,
@@ -146,7 +146,7 @@ parse_message(<<"i">>, 84, MessageBody) ->
     {strip_info, MessageBody};
 
 parse_message(<<"C">>, 105, MessageBody) ->
-    io:fwrite("parse market snapshot~n", []),
+    %io:fwrite("parse market snapshot~n", []),
     << _ReqSeqId:32, MarketType:16, MarketId:32, TradingStatus:1/binary, Volume:32, BlockVolume:32, EFSVolume:32, EFPVolume:32, OpenInterest:32, OpeningPrice:64, SettlementPrice:64,
        High:64, Low:64, VWAP:64, NumOfOrderEntries:32, LastTradePrice:64, LastTradeQuantity:32, LastTradeDateTime:64, SettlePriceDateTime:64, _ReservedField1:2/binary >> = MessageBody,
     MS = #market_snapshot{
@@ -158,7 +158,7 @@ parse_message(<<"C">>, 105, MessageBody) ->
     {market_snapshot, MS};
 
 parse_message(<<"D">>, 43, MessageBody) ->
-    io:fwrite("received market snapshot order~n", []),
+    %io:fwrite("received market snapshot order~n", []),
     << _ReqSeqId:32, MarketType:16, MarketId:32, OrderId:64, OrderSequenceId:16, Side:1/binary, Price:64, Quantity:32, IsImplied:1/binary, IsRFQ:1/binary, OrderEntryDateTime:64 >> = MessageBody,
     O = #order{
       market_type=MarketType, market_id=MarketId, order_id=OrderId, order_sequence_id=OrderSequenceId, side=Side, price=Price, quantity=Quantity, is_implied=IsImplied, is_rfq=IsRFQ, 
@@ -167,7 +167,7 @@ parse_message(<<"D">>, 43, MessageBody) ->
     {market_snapshot_order, O};
 
 parse_message(<<"E">>, 45, MessageBody) ->
-    io:fwrite("received add/modify order~n", []),
+    %io:fwrite("received add/modify order~n", []),
     << MarketId:32, OrderId:64, OrderSequenceId:16, Side:1/binary, Price:64, Quantity:32, IsImplied:1/binary, IsRFQ:1/binary, OrderEntryDateTime:64, SentTime:64 >> = MessageBody,
     O = #order{
       market_id=MarketId, order_id=OrderId, order_sequence_id=OrderSequenceId, side=Side, price=Price, quantity=Quantity, is_implied=IsImplied, is_rfq=IsRFQ, 
@@ -176,13 +176,13 @@ parse_message(<<"E">>, 45, MessageBody) ->
     {add_modify_order, O};
 
 parse_message(<<"F">>, 21, MessageBody) ->
-    io:fwrite("received add/modify order~n", []),
+    %io:fwrite("received add/modify order~n", []),
     << MarketId:32, OrderId:64, SentTime:64, SecurityType:1/binary >> = MessageBody,   
     D = #deleted_order{ market_id=MarketId, order_id=OrderId, sent_time=SentTime, security_type=SecurityType },
     {delete_order, D};
 
 parse_message(<<"G">>, 43, MessageBody) ->
-    io:fwrite("received trade~n", []),
+    %io:fwrite("received trade~n", []),
     << MarketId:32, OrderId:64, IsSystemPricedLeg:1/binary, Price:64, Quantity:16, BlockTradeType:1/binary, TransactDateTime:64, SentTime:64, SystemPricedLegType:1/binary >> = MessageBody,    
     T = #trade{
       market_id=MarketId, order_id=OrderId, is_system_priced_leg=IsSystemPricedLeg, price=Price, quantity=Quantity, block_trade_type=BlockTradeType, transact_date_time=TransactDateTime, 
@@ -212,7 +212,7 @@ parse_message(<<"L">>, 1008, MessageBody) ->
     {system_text, MessageBody};
 
 parse_message(<<"M">>, 20, MessageBody) ->
-    io:fwrite("parse open interest~n", []),
+    %io:fwrite("parse open interest~n", []),
     << MarketId:32, OpenInterest:32, OpenInterestChange:32, DateTime:64 >> = MessageBody,
     OI = #open_interest{ market_id=MarketId, open_interest=OpenInterest, open_interest_change=OpenInterestChange, date_time=DateTime },
     {open_interest, OI};
