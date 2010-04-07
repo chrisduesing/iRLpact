@@ -38,11 +38,11 @@ start() ->
     
     %% api test environment
     irlpact_connector:connect("63.247.113.163", 8000),
-    irlpact_connector:login("ccx_pf","Starts123"),
+    irlpact_connector:login("username","password"),
 
     %% perf test environment
-    %%irlpact_connector:connect("63.247.113.214", 8000),
-    %%irlpact_connector:login("ccx_ps","Starts123"),
+    %irlpact_connector:connect("63.247.113.214", 8000),
+    %irlpact_connector:login("username","password"),
     
     % request product definitions and market updates
     irlpact_connector:request_products_by_type([12,30,34,38,43]),

@@ -182,8 +182,8 @@ parse_message(<<"F">>, 21, MessageBody) ->
     {delete_order, D};
 
 parse_message(<<"G">>, 43, MessageBody) ->
-    %io:fwrite("received trade~n", []),
-    << MarketId:32, OrderId:64, IsSystemPricedLeg:1/binary, Price:64, Quantity:16, BlockTradeType:1/binary, TransactDateTime:64, SentTime:64, SystemPricedLegType:1/binary >> = MessageBody,    
+    io:fwrite("parse_message: trade~n", []),
+    << MarketId:32, OrderId:64, IsSystemPricedLeg:1/binary, Price:64, Quantity:32, BlockTradeType:1/binary, TransactDateTime:64, SentTime:64, SystemPricedLegType:1/binary >> = MessageBody,    
     T = #trade{
       market_id=MarketId, order_id=OrderId, is_system_priced_leg=IsSystemPricedLeg, price=Price, quantity=Quantity, block_trade_type=BlockTradeType, transact_date_time=TransactDateTime, 
       sent_time=SentTime, system_priced_leg_type=SystemPricedLegType
