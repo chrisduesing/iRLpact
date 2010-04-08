@@ -119,7 +119,7 @@ scan(BadFormatMessage, Messages) ->
 %%--------------------------------------------------------------------
 parse_message(<<"A">>, 425, MessageBody) ->
     <<RequestSeqId:32, Code:1/binary, Text:120/binary, MarketTypesPermissioned:300/binary>> = MessageBody,
-    {login_response, RequestSeqId, Code, Text, MarketTypesPermissioned};
+    {login_response, RequestSeqId, Code, clean(Text), clean(MarketTypesPermissioned)};
 
 parse_message(<<"B">>, 521, MessageBody) -> 
    %io:fwrite("received product definition response~n", []),
@@ -129,16 +129,16 @@ parse_message(<<"B">>, 521, MessageBody) ->
        IncrementStrikePrice:32, NumDecimalsStrikePrice:1/binary, MinOptionsPrice:64, MaxOptionsPrice:64, IncrementOptionsPrice:32, NumDecimalsOptionsPrice:1/binary, TickValue:64,
        AllowOptions:1/binary, ClearedAlias:15/binary, AllowImplied:1/binary, OptionsExpirationYear:16, OptionsExpirationMonth:16, OptionsExpirationDay:16, MinPrice:64, MaxPrice:64,
        ProductId:16, ProductName:62/binary, HubId:16, HubAlias:80/binary, StripId:16, StripName:39/binary, _ReservedField1:1/binary >> = MessageBody,
-    PD = #product_definition{ 
-      market_type=RequestMarketType, num_markets=NumMarkets, market_id=MarketId, contract_symbol=ContractSymbol, trading_status=TradingStatus, order_price_denominator=OrderPriceDenominator, 
-      increment_price=IncrementPrice, increment_qty=IncrementQty, lot_size=LotSize, market_desc=MarketDesc, maturity_year=MaturityYear, marturity_month=MaturityMonth, maturity_day=MaturityDay, 
-      is_spread=IsSpread, is_crack_spread=IsCrackSpread, primary_market_id=PrimaryMarketId, secondary_market_id=SecondaryMarketId, is_options=IsOptions, option_type=OptionType, 
-      strike_price=StrikePrice, second_strike=SecondStrike, deal_price_denominator=DealPriceDenominator, min_qty=MinQty, unit_qty=UnitQty, currency=Currency, min_strike_price=MinStrikePrice, 
-      max_strike_price=MaxStrikePrice, increment_strike_price=IncrementStrikePrice, num_decimals_strike_price=NumDecimalsStrikePrice, min_options_price=MinOptionsPrice, 
-      max_options_price=MaxOptionsPrice, increment_options_price=IncrementOptionsPrice, num_decimals_options_price=NumDecimalsOptionsPrice, tick_value=TickValue, allow_options=AllowOptions, 
-      cleared_alias=ClearedAlias, allow_implied=AllowImplied, options_expiration_year=OptionsExpirationYear, options_expiration_month=OptionsExpirationMonth, 
-      options_expiration_day=OptionsExpirationDay, min_price=MinPrice, max_price=MaxPrice, product_id=ProductId, product_name=ProductName, hub_id=HubId, hub_alias=HubAlias, strip_id=StripId, 
-      strip_name=StripName 
+    PD = #product_definition{
+      market_type=RequestMarketType, num_markets=NumMarkets, market_id=MarketId, contract_symbol=clean(ContractSymbol), trading_status=TradingStatus, 
+      order_price_denominator=OrderPriceDenominator, increment_price=IncrementPrice, increment_qty=IncrementQty, lot_size=LotSize, market_desc=clean(MarketDesc), maturity_year=MaturityYear, 
+      marturity_month=MaturityMonth, maturity_day=MaturityDay, is_spread=IsSpread, is_crack_spread=IsCrackSpread, primary_market_id=PrimaryMarketId, secondary_market_id=SecondaryMarketId, 
+      is_options=IsOptions, option_type=OptionType, strike_price=StrikePrice, second_strike=SecondStrike, deal_price_denominator=DealPriceDenominator, min_qty=MinQty, unit_qty=UnitQty, 
+      currency=clean(Currency), min_strike_price=MinStrikePrice, max_strike_price=MaxStrikePrice, increment_strike_price=IncrementStrikePrice, num_decimals_strike_price=NumDecimalsStrikePrice, 
+      min_options_price=MinOptionsPrice, max_options_price=MaxOptionsPrice, increment_options_price=IncrementOptionsPrice, num_decimals_options_price=NumDecimalsOptionsPrice, 
+      tick_value=TickValue, allow_options=AllowOptions, cleared_alias=clean(ClearedAlias), allow_implied=AllowImplied, options_expiration_year=OptionsExpirationYear, 
+      options_expiration_month=OptionsExpirationMonth, options_expiration_day=OptionsExpirationDay, min_price=MinPrice, max_price=MaxPrice, product_id=ProductId, product_name=clean(ProductName), 
+      hub_id=HubId, hub_alias=clean(HubAlias), strip_id=StripId, strip_name=clean(StripName) 
      },
     {product_definition, PD};
 
@@ -276,6 +276,11 @@ make_list(_Of, 0, List) ->
 
 make_list(Of, Length, List) ->
     make_list(Of, Length - 1, [Of] ++ List).
+
+clean(Binary) ->
+    S1 = binary_to_list(Binary),
+    S2 = string:strip(S1, right, 0),
+    list_to_binary(S2).
 
 %%--------------------------------------------------------------------
 %%% Unit tests
