@@ -151,8 +151,8 @@ parse_message(<<"C">>, 105, MessageBody) ->
        High:64, Low:64, VWAP:64, NumOfOrderEntries:32, LastTradePrice:64, LastTradeQuantity:32, LastTradeDateTime:64, SettlePriceDateTime:64, _ReservedField1:2/binary >> = MessageBody,
     MS = #market_snapshot{
       market_type = MarketType, market_id = MarketId, trading_status = TradingStatus, volume = Volume, block_volume = BlockVolume, efs_volume = EFSVolume, 
-      efp_volume = EFPVolume, open_interest = OpenInterest, opening_price = OpeningPrice, settlement_price = SettlementPrice, high = High, low = Low, vwap = VWAP, 
-      num_of_order_entries = NumOfOrderEntries, last_trade_price = LastTradePrice, last_trade_quantity = LastTradeQuantity, last_trade_date_time = LastTradeDateTime, 
+      efp_volume = EFPVolume, open_interest = OpenInterest, opening_price = float(OpeningPrice), settlement_price = float(SettlementPrice), high = float(High), low = float(Low), vwap = VWAP, 
+      num_of_order_entries = NumOfOrderEntries, last_trade_price = float(LastTradePrice), last_trade_quantity = LastTradeQuantity, last_trade_date_time = LastTradeDateTime, 
       settle_price_date_time = SettlePriceDateTime
      },
     {market_snapshot, MS};
@@ -161,7 +161,7 @@ parse_message(<<"D">>, 43, MessageBody) ->
     %io:fwrite("received market snapshot order~n", []),
     << _ReqSeqId:32, MarketType:16, MarketId:32, OrderId:64, OrderSequenceId:16, Side:1/binary, Price:64, Quantity:32, IsImplied:1/binary, IsRFQ:1/binary, OrderEntryDateTime:64 >> = MessageBody,
     O = #order{
-      market_type=MarketType, market_id=MarketId, order_id=OrderId, order_sequence_id=OrderSequenceId, side=Side, price=Price, quantity=Quantity, is_implied=IsImplied, is_rfq=IsRFQ, 
+      market_type=MarketType, market_id=MarketId, order_id=OrderId, order_sequence_id=OrderSequenceId, side=Side, price=float(Price), quantity=Quantity, is_implied=IsImplied, is_rfq=IsRFQ, 
       order_entry_date_time=OrderEntryDateTime, is_snapshot=true
      },
     {market_snapshot_order, O};
@@ -170,7 +170,7 @@ parse_message(<<"E">>, 45, MessageBody) ->
     %io:fwrite("received add/modify order~n", []),
     << MarketId:32, OrderId:64, OrderSequenceId:16, Side:1/binary, Price:64, Quantity:32, IsImplied:1/binary, IsRFQ:1/binary, OrderEntryDateTime:64, SentTime:64 >> = MessageBody,
     O = #order{
-      market_id=MarketId, order_id=OrderId, order_sequence_id=OrderSequenceId, side=Side, price=Price, quantity=Quantity, is_implied=IsImplied, is_rfq=IsRFQ, 
+      market_id=MarketId, order_id=OrderId, order_sequence_id=OrderSequenceId, side=Side, price=float(Price), quantity=Quantity, is_implied=IsImplied, is_rfq=IsRFQ, 
       order_entry_date_time=OrderEntryDateTime, sent_time=SentTime, is_snapshot=false
      },
     {add_modify_order, O};
@@ -185,7 +185,7 @@ parse_message(<<"G">>, 43, MessageBody) ->
     io:fwrite("parse_message: trade~n", []),
     << MarketId:32, OrderId:64, IsSystemPricedLeg:1/binary, Price:64, Quantity:32, BlockTradeType:1/binary, TransactDateTime:64, SentTime:64, SystemPricedLegType:1/binary >> = MessageBody,    
     T = #trade{
-      market_id=MarketId, order_id=OrderId, is_system_priced_leg=IsSystemPricedLeg, price=Price, quantity=Quantity, block_trade_type=BlockTradeType, transact_date_time=TransactDateTime, 
+      market_id=MarketId, order_id=OrderId, is_system_priced_leg=IsSystemPricedLeg, price=float(Price), quantity=Quantity, block_trade_type=BlockTradeType, transact_date_time=TransactDateTime, 
       sent_time=SentTime, system_priced_leg_type=SystemPricedLegType
      },
     {trade, T};
@@ -196,13 +196,14 @@ parse_message(<<"H">>, 34, MessageBody) ->
 parse_message(<<"I">>, 33, MessageBody) ->
     io:fwrite("received cancelled trade~n", []),
     << MarketId:32, OrderId:64, Price:64, Quantity:16, BlockTradeType:1/binary, DateTime:64 >> = MessageBody,   
-    CT = #cancelled_trade{ market_id=MarketId, order_id=OrderId, price=Price, quantity=Quantity, block_trade_type=BlockTradeType, date_time=DateTime },
+    CT = #cancelled_trade{ market_id=MarketId, order_id=OrderId, price=float(Price), quantity=Quantity, block_trade_type=BlockTradeType, date_time=DateTime },
     {cancelled_trade, CT};
 
 parse_message(<<"J">>, 52, MessageBody) ->
     %io:fwrite("parse market snapshot~n", []),
     << MarketId:32, Volume:32, BlockVolume:32, EFSVolume:32, EFPVolume:32, High:64, Low:64, VWAP:64, DateTime:64 >> = MessageBody,
-    MS = #market_snapshot_update{ market_id=MarketId, volume=Volume, block_volume=BlockVolume, efs_volume=EFSVolume, efp_volume=EFPVolume, high=High, low=Low, vwap=VWAP, date_time=DateTime },
+    MS = #market_snapshot_update{ market_id=MarketId, volume=Volume, block_volume=BlockVolume, efs_volume=EFSVolume, efp_volume=EFPVolume, high=float(High), low=float(Low), 
+				  vwap=VWAP, date_time=DateTime },
     {market_statistics, MS};
 
 parse_message(<<"K">>, 13, MessageBody) ->
